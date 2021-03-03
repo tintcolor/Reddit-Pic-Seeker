@@ -5,7 +5,7 @@ export const FETCH_USER_SUBMITTED_POSTS = (user) => {
     return dispatch => {
         return new Promise((resolve, reject) => {
 
-            axios.get('https://www.reddit.com/user/' + user + '/submitted.json')
+            axios.get('https://www.reddit.com/user/' + user + '/submitted.json?limit=100')
 
                 .then(function (response) {
                     dispatch({
@@ -15,7 +15,7 @@ export const FETCH_USER_SUBMITTED_POSTS = (user) => {
                     resolve(response.data)
                 })
                 .catch(function (error) {
-                    debugger
+                    
                     console.log(error)
 
                     dispatch({

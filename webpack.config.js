@@ -5,7 +5,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack')
 
 var config = {
-  entry: ["babel-polyfill","main.js"],
+  entry: ["babel-polyfill", "main.js"],
 
   output: {
     path: __dirname,
@@ -48,7 +48,17 @@ var config = {
     ]
   },
   devServer: {
-    port: 5000
+    port: 5000,
+    publicPath: '/',
+    historyApiFallback: true,
+    // proxy:{
+    //   '*/**':{
+    //     target:{
+    //       port:5000
+    //     },
+    //     secure: false
+    //   }
+    // }
   },
   node: {
     fs: "empty"

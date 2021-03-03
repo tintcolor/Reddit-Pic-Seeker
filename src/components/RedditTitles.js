@@ -11,6 +11,15 @@ import clientId from './clientId.json';
 import PropTypes from 'prop-types';
 import { Menu, Item, Sidebar, Segment, Icon, Header, Sticky, Rail, Grid as SemanticGrid } from 'semantic-ui-react';
 import { FETCH_USER_SUBMITTED_POSTS, FETCH_ADDITIONAL_USER_SUBMITTED_POSTS } from '../actions/Reddit'
+import _isNil from 'lodash/isNil'
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route,
+    Link,
+    withRouter, matchPath,
+    useParams
+} from "react-router-dom";
 // import BurgerMenu from 'react-burger-menu';//code clean up
 //categories
 //git uploading
@@ -69,13 +78,47 @@ class RedditTitles extends Component {
 
     }
 
-    retrievePhotos = async () => {
+    componentDidMount() {
 
-        let response = await this.props.dispatch(FETCH_USER_SUBMITTED_POSTS(this.state.user))
+        const match = matchPath(this.props.history.location.pathname, {
+            path: '/:param',
+            exact: true,
+            strict: false
+        })
+
+        if (match) {
+            const id = match.params.param
+            this.fetchData(id);
+
+        }
+    }
+
+    fetchData = id => {
+
+        this.setState({
+            user: id
+        })
+        this.retrievePhotos(id)
+    };
+
+    retrievePhotos = async (urlUser) => {
+
+        let user = this.state.user
+        if (!_isNil(urlUser)) { 
+            this.firstSubmission = true
+
+            user = urlUser }
+        let response = await this.props.dispatch(FETCH_USER_SUBMITTED_POSTS(user))
         this.retrievePage(response.data.children.pop())
         this.resetLocalState();
         this.createPhotoArray();
         this.setLocalStorage();
+        if (!_isNil(urlUser)) {
+            this.firstSubmission = true
+
+            this.renderPhotos()
+        }
+
 
     }
 
@@ -87,9 +130,9 @@ class RedditTitles extends Component {
 
     retrieveMoreMedia = async () => {
 
-        
+
         let response = await this.props.dispatch(FETCH_ADDITIONAL_USER_SUBMITTED_POSTS(this.state.user, this.state.lastPageId))
-        
+
         this.props.dispatch({
             type: "SET_SUBMITTED_ELEMENTS",
             submittedElements: [...this.props.submittedElements, ...response.data.children]
@@ -204,7 +247,6 @@ class RedditTitles extends Component {
 
 
     createPhotoArray = () => {
-
         // let photoArray = this.state.photos;
         // let set = new Set();
 
@@ -363,7 +405,7 @@ class RedditTitles extends Component {
     }
 
     buildMediaGrid(field, index) {
-
+        
         let video = /.mp4/.test(field.imageURL);
 
         const centerImage = {
@@ -450,13 +492,13 @@ class RedditTitles extends Component {
                 return (
                     <div className="text-center">
                         This person has no submissons.
-            </div>
+                    </div>
                 )
             }
             return (
                 <div className="text-center">
                     Reddit Pic Seeker
-            </div>
+                </div>
             )
         } else if (submittedElements.length > 0 && error === null && photos.length === 0) {
             return (
@@ -647,60 +689,86 @@ class RedditTitles extends Component {
         )
     }
 
-    render() {
-        let { submittedElements } = this.props;
-        // console.log(this.state)
-
-        let Carousel = this.state.renderCarousel ? <PhotoCarousel photos={this.state.photos} /> : null;
-        let displayView = this.firstSubmission ? this.displaySecondView() : this.displayInitialView();
+    renderMenu() {
         return (
-            <div style={{ "height": "100%" }}>
-                <Menu className="fixed ">
+            <Menu className="fixed ">
 
-                    <Header>
-                        <Menu.Item onClick={this.toggleVisibility}><Icon name="sidebar" /></Menu.Item>
-                    </Header>
+                <Header>
+                    <Menu.Item onClick={this.toggleVisibility}><Icon name="sidebar" /></Menu.Item>
+                </Header>
 
-                </Menu>
-                <Sidebar.Pushable as={Segment}>
-                    <Sidebar
-                        className="fixed top-padding top-position-padding dimmed"
-                        as={Menu}
-
-                        width='thin'
-                        visible={this.state.visible}
-                        icon='labeled'
-                        vertical inverted>
-                        <Menu.Item name='grid'>
-                            {this.renderGridDropdownButton()}
-                        </Menu.Item>
-
-                        <Menu.Item name='nsfw'>
-                            <span>{this.renderNSFWToggle()}</span>
-                        </Menu.Item>
-
-                    </Sidebar>
-                    <Sidebar.Pusher>
-
-                        <SemanticGrid>
-                            <SemanticGrid.Row>
-                                <SemanticGrid.Column>
-                                    <Segment basic
-                                        className="background bottom top-padding">
-                                        {displayView}
-                                    </Segment>
-                                </SemanticGrid.Column>
-                            </SemanticGrid.Row>
-                        </SemanticGrid>
-                    </Sidebar.Pusher>
-                </Sidebar.Pushable>
-
-
-
-            </div>
+            </Menu>
         )
     }
+
+    renderSidebar() {
+        let displayView = this.firstSubmission ? this.displaySecondView() : this.displayInitialView();
+
+        return (
+            <Sidebar.Pushable as={Segment}>
+                <Sidebar
+                    className="fixed top-padding top-position-padding dimmed"
+                    as={Menu}
+
+                    width='thin'
+                    visible={this.state.visible}
+                    icon='labeled'
+                    vertical inverted>
+                    <Menu.Item name='grid'>
+                        {this.renderGridDropdownButton()}
+                    </Menu.Item>
+
+                    <Menu.Item name='nsfw'>
+                        <span>{this.renderNSFWToggle()}</span>
+                    </Menu.Item>
+
+                </Sidebar>
+                <Sidebar.Pusher>
+
+                    <SemanticGrid>
+                        <SemanticGrid.Row>
+                            <SemanticGrid.Column>
+                                <Segment basic
+                                    className="background bottom top-padding">
+                                    {displayView}
+                                </Segment>
+                            </SemanticGrid.Column>
+                        </SemanticGrid.Row>
+                    </SemanticGrid>
+                </Sidebar.Pusher>
+            </Sidebar.Pushable>
+        )
+    }
+
+    render() {
+        let { submittedElements } = this.props;
+
+        let Carousel = this.state.renderCarousel ? <PhotoCarousel photos={this.state.photos} /> : null;
+        return (
+
+            <Router>
+                <Switch>
+                    <Route path="/">
+                        <div style={{ "height": "100%" }}>
+                            {this.renderMenu()}
+                            {this.renderSidebar()}
+
+                        </div>
+                    </Route>
+                </Switch>
+            </Router>
+
+
+        )
+    }
+
+    captureURL() {
+        let { slug } = useParams();
+        return ""
+    }
+
 }
+
 
 
 const mapStateToProps = state => {
@@ -712,4 +780,4 @@ const mapStateToProps = state => {
     }
 };
 
-export default connect(mapStateToProps)(RedditTitles);
+export default connect(mapStateToProps)(withRouter(RedditTitles));
