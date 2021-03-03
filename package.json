@@ -9,7 +9,7 @@
   "author": "ant jones",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "babel-core": "6.23.1",
     "babel-loader": "6.2.5",
     "babel-plugin-add-module-exports": "0.2.1",
