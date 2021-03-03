@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "devDependencies": {},
   "scripts": {
-    "start": "serve -s build",
+    "start": "webpack-dev-server --config webpack.config.js",
     "build": "webpack"
   },
   "author": "ant jones",
@@ -53,7 +53,7 @@
     "redux-logger": "^3.0.6",
     "redux-promise-middleware": "^5.0.0",
     "redux-thunk": "^2.2.0",
-    "semantic-ui-react": "^0.82.3",
+    "semantic-ui-react": "^2.0.0",
     "snapsvg-cjs": "0.0.6",
     "style-loader": "^0.20.1",
     "tumblr.js": "^2.0.0",

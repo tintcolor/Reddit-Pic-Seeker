@@ -208,6 +208,11 @@ font-size: -webkit-xxx-large; */
     border-radius: 0;
 }
 
+.pushable{
+    height: unset !important;
+    overflow-y: hidden;
+}
+
 .pushable>.pusher {
     min-height: 100%;
 }

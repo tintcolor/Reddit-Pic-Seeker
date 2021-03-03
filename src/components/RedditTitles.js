@@ -358,6 +358,10 @@ class RedditTitles extends Component {
         });
     }
 
+     changeURLPerUser = () => {
+        this.props.history.push(this.state.user);
+      };
+    
     renderMediaCheckbox() {
 
         return (
@@ -406,6 +410,7 @@ class RedditTitles extends Component {
         event.preventDefault();
         this.firstSubmission = true;
         this.retrievePhotos();
+        this.changeURLPerUser()
     }
 
     buildMediaGrid(field, index) {
@@ -710,6 +715,7 @@ class RedditTitles extends Component {
 
         return (
             <Sidebar.Pushable as={Segment}>
+                
                 <Sidebar
                     className="fixed top-padding top-position-padding dimmed"
                     as={Menu}
@@ -718,6 +724,7 @@ class RedditTitles extends Component {
                     visible={this.state.visible}
                     icon='labeled'
                     vertical inverted>
+                        <div>
                     <Menu.Item name='grid'>
                         {this.renderGridDropdownButton()}
                     </Menu.Item>
@@ -725,8 +732,9 @@ class RedditTitles extends Component {
                     <Menu.Item name='nsfw'>
                         <span>{this.renderNSFWToggle()}</span>
                     </Menu.Item>
-
+                    </div>
                 </Sidebar>
+                
                 <Sidebar.Pusher>
 
                     <SemanticGrid>
