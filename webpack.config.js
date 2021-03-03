@@ -1,8 +1,16 @@
 var path = require("path");
-
+const dotenv = require('dotenv');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const webpack = require('webpack')
+const env = dotenv.config().parsed;
+console.log("asdfasdfsadfsdfdsa");
+console.log(env);
+
+const envKeys = Object.keys(env).reduce((prev, next) => {
+  prev[`process.env.${next}`] = JSON.stringify(env[next]);
+  return prev;
+}, {});
 
 var config = {
   entry: ["babel-polyfill", "main.js"],
@@ -22,7 +30,7 @@ var config = {
       chunks: ["app"],
       inject: true
     }),
-
+    new webpack.DefinePlugin({envKeys}),
     new webpack.optimize.ModuleConcatenationPlugin()
   ],
   module: {
