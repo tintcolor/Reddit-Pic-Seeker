@@ -7,7 +7,6 @@ import toggleStyles from '../assets/Toggle.css';
 import { Button, FormControl, Grid, Row, Col, Image, DropdownButton, MenuItem, Carousel, Modal, Checkbox } from 'react-bootstrap';
 import Toggle from 'react-toggle';
 import PhotoCarousel from './PhotoCarousel';
-// import clientId from './clientId.json';
 import PropTypes from 'prop-types';
 import { Menu, Item, Sidebar, Segment, Icon, Header, Sticky, Rail, Grid as SemanticGrid } from 'semantic-ui-react';
 import { FETCH_USER_SUBMITTED_POSTS, FETCH_ADDITIONAL_USER_SUBMITTED_POSTS } from '../actions/Reddit'
@@ -20,7 +19,6 @@ import {
     withRouter, matchPath,
     useParams
 } from "react-router-dom";
-const dotenv = require('dotenv');
 
 
 
@@ -108,10 +106,11 @@ class RedditTitles extends Component {
     retrievePhotos = async (urlUser) => {
 
         let user = this.state.user
-        if (!_isNil(urlUser)) { 
+        if (!_isNil(urlUser)) {
             this.firstSubmission = true
 
-            user = urlUser }
+            user = urlUser
+        }
         let response = await this.props.dispatch(FETCH_USER_SUBMITTED_POSTS(user))
         this.retrievePage(response.data.children.pop())
         this.resetLocalState();
@@ -360,9 +359,7 @@ class RedditTitles extends Component {
     }
 
     renderMediaCheckbox() {
-        const env = dotenv.config().parsed;
-        console.log("asdfasdfsadfsdfdsa");
-        console.log(envKeys);
+
         return (
             <form>
                 <Checkbox
@@ -412,7 +409,7 @@ class RedditTitles extends Component {
     }
 
     buildMediaGrid(field, index) {
-        
+
         let video = /.mp4/.test(field.imageURL);
 
         const centerImage = {
