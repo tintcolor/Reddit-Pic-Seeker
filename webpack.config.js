@@ -10,6 +10,7 @@ var config = {
 
   output: {
     path: __dirname,
+    publicPath: '/dist/',
     filename: "index.js"
   },
   resolve: {
