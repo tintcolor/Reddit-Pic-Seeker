@@ -9,8 +9,8 @@ var config = {
   entry: ["babel-polyfill", "main.js"],
 
   output: {
-    path: __dirname,
-    publicPath: '/dist/',
+    path: __dirname + '/dist',
+    publicPath: '/',
     filename: "index.js"
   },
   resolve: {
@@ -24,7 +24,7 @@ var config = {
       chunks: ["app"],
       inject: true
     }),
-    new webpack.optimize.ModuleConcatenationPlugin()
+    new webpack.optimize.ModuleConcatenationPlugin(),
   ],
   module: {
     loaders: [{
@@ -37,7 +37,7 @@ var config = {
     },
     {
       test: /\.css$/,
-      loader: "style-loader!css-loader"
+      loader: "style-loader!css-loader",
     },
     {
       test: /\.less$/,
@@ -45,7 +45,17 @@ var config = {
       loaders: [
         "less-loader"
       ]
-    }
+    },
+    {
+      test: /.(png|gif|jpg|jpeg|ttf|otf|eot|svg|woff(2)?)(\?[a-z0-9]+)?$/,
+      use: [{
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          outputPath: 'dist/assets/',    // where the fonts will go
+        }
+      }]
+    } 
     ]
   },
   devServer: {
