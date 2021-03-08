@@ -4,13 +4,14 @@ import { render } from 'react-dom';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import toggleStyles from '../assets/Toggle.css';
-import { Button, FormControl, Grid, Row, Col, Image, DropdownButton, MenuItem, Carousel, Modal, Checkbox } from 'react-bootstrap';
+import { Button, Form, FormGroup, FormControl, Grid, Row, Col, Image, DropdownButton, MenuItem, Carousel, Modal, Checkbox } from 'react-bootstrap';
 import Toggle from 'react-toggle';
 import PhotoCarousel from './PhotoCarousel';
 import PropTypes from 'prop-types';
 import { Menu, Item, Sidebar, Segment, Icon, Header, Sticky, Rail, Grid as SemanticGrid } from 'semantic-ui-react';
 import { FETCH_USER_SUBMITTED_POSTS, FETCH_ADDITIONAL_USER_SUBMITTED_POSTS } from '../actions/Reddit'
 import _isNil from 'lodash/isNil'
+import _get from 'lodash/get'
 import {
     BrowserRouter as Router,
     Switch,
@@ -59,6 +60,7 @@ class RedditTitles extends Component {
             userList: [],
             displayPics: true,
             displayGifs: false,
+            isScrolled: false,
             sidebarOpen: true,
             lastPageId: "",
             visible: false
@@ -66,22 +68,56 @@ class RedditTitles extends Component {
     }
 
     componentWillMount() {
-
-        if (localStorage.getItem("userList") !== null && localStorage.getItem("gridStateTitle") !== null) {
-            var newList = [...new Set(localStorage.getItem("userList").split(","))]
+        
+        if (Object.keys(localStorage).length !== 0) {
+            let newList = [...new Set(!_isNil(localStorage.getItem("userList"))?localStorage.getItem("userList").split(","):"")]
+            
             this.setState({
                 userList: newList,
-                num: Number(localStorage.getItem("gridState")),
-                dropDownTitle: localStorage.getItem("gridStateTitle"),
-                nsfw: JSON.parse(localStorage.getItem("NSFW"))
+                num: !_isNil(Number(localStorage.getItem("gridState")))?Number(localStorage.getItem("gridState")):0,
+                dropDownTitle: !_isNil(localStorage.getItem("gridStateTitle"))?(localStorage.getItem("gridStateTitle")):'',
+                nsfw: !_isNil(JSON.parse(localStorage.getItem("NSFW")))?(JSON.parse(localStorage.getItem("NSFW"))) : false
             })
-
         }
 
     }
 
-    componentDidMount() {
+    componentWillUnmount() {
+        window.removeEventListener('scroll', this.listenToScroll)
+    }
 
+    listenToScroll = () => {
+        const winScroll =
+            document.body.scrollTop || document.documentElement.scrollTop
+
+        const height =
+            document.documentElement.scrollHeight -
+            document.documentElement.clientHeight
+
+        const scrolled = winScroll / height
+
+        // console.log(winScroll);
+        if (scrolled > 0 && !this.state.isScrolled) {
+            console.log(scrolled);
+            this.setState({
+                isScrolled: scrolled > 0,
+            })
+        }
+        
+        if (scrolled === 0 && this.state.isScrolled) {
+            console.log(scrolled);
+            this.setState({
+                isScrolled: false,
+            })
+        }
+        // console.log(height);
+        // this.setState({
+        //   theposition: scrolled,
+        // })
+    }
+
+    componentDidMount() {
+        window.addEventListener('scroll', this.listenToScroll)
         const match = matchPath(this.props.history.location.pathname, {
             path: '/:param',
             exact: true,
@@ -297,7 +333,20 @@ class RedditTitles extends Component {
 
 
             // }
+            else if (field.data.domain === "redgifs.com") {
+                // debugger
+                let userName = imageURL.match(/[a-zA-Z0-9]+$/)
 
+                
+
+                if (!_isNil(field.data.preview)) {
+                    // debugger
+                    // imageURL
+                    this.addPhotosToState(field.data.preview.reddit_video_preview.fallback_url, link, field.data.over_18);
+
+                }
+
+            }
             else if (field.data.domain === "i.redd.it") {
                 this.addPhotosToState(field.data.url, link, field.data.over_18);
 
@@ -358,21 +407,26 @@ class RedditTitles extends Component {
         });
     }
 
-     changeURLPerUser = () => {
+    changeURLPerUser = () => {
         this.props.history.push(this.state.user);
-      };
-    
+    };
+
     renderMediaCheckbox() {
 
+        // if scrolled down, add the inline to checkbox
+        // inline={true}
+        let inline = this.state.isScrolled
         return (
             <form>
                 <Checkbox
+                    inline={inline}
                     name="displayPics"
                     onChange={this.handleCheckboxMediaChange}
                     defaultChecked={this.state.displayPics} >
                     Pics
     </Checkbox>
                 <Checkbox
+                    inline
                     name="displayGifs"
                     onChange={this.handleCheckboxMediaChange}
                     checked={this.state.displayGifs}>
@@ -391,7 +445,7 @@ class RedditTitles extends Component {
                         <br />
                         <video
                             preload="auto"
-                            autoPlay="autoplay"
+                            // autoPlay="autoplay"
                             loop="loop"
                             style={{ maxWidth: 100 + '%' }}
                             src={imageURL} />
@@ -402,7 +456,9 @@ class RedditTitles extends Component {
     }
 
     handleChange = (event) => {
+        // if(event.target.value.length>0 && event.target.value<=20){
         this.setState({ user: event.target.value.replace(" ", "") });
+        // }
         // this.setState({ user: "dusenberrypie" });
     }
 
@@ -473,21 +529,25 @@ class RedditTitles extends Component {
 
     renderSumbitBox = (inputBoxWidth) => {
 
+
+        let fullScreenCssWidth = this.state.photos.length === 0 ? "initial-screen-input-box": "secondary-screen-input-box"
         return (
-            <form onSubmit={this.handleSubmit}>
-                <label style={{ position: "relative" }}>
+            <Form onSubmit={this.handleSubmit} inline>
+                <FormGroup controlId="formInlineName">
                     <FormControl
                         // style={{ minWidth: inputBoxWidth }}
+                        className={fullScreenCssWidth}
                         type="text"
                         value={this.state.user}
                         placeholder="Username"
-                        onChange={this.handleChange} />
+                        onChange={this.handleChange}
+                        maxLength="20" />
                     <button type="submit" value="Submit" className="submit-button">
                         <img src="../src/assets/images/arrow_right.png" alt="Submit" style={{ width: '28%' }}>
                         </img>
                     </button>
-                </label>
-            </form>
+                </FormGroup>
+            </Form>
         )
     }
 
@@ -592,6 +652,7 @@ class RedditTitles extends Component {
 
     renderNSFWToggle() {
         let Checkbox = this.state.nsfw ? this.renderCheckbox() : null;
+        
         return (
             <span className="nsfw_center nsfw_group">
                 <span>nsfw: </span>
@@ -606,7 +667,7 @@ class RedditTitles extends Component {
 
     renderSubmittedDropdown() {
         return (
-            <div>
+            <div className="submitted-dropdown">
                 <DropdownButton
                     bsSize="xsmall"
                     title="Submitted Usernames"
@@ -675,7 +736,7 @@ class RedditTitles extends Component {
     displaySecondView() {
         return (
             <div className="second-view">
-                <div className="fixed-header">
+                {!this.state.isScrolled && <div className="fixed-header">
                     <div className="fixed-centered-section input-style center">
                         {this.renderSumbitBox("45em")}
                         <div className="dropdown-grid">
@@ -683,7 +744,7 @@ class RedditTitles extends Component {
                             {this.renderMediaCheckbox()}
                         </div>
                     </div>
-                </div>
+                </div>}
                 {/* {Carousel} */}
                 <Grid
                     fluid={true}>
@@ -704,18 +765,38 @@ class RedditTitles extends Component {
 
                 <Header>
                     <Menu.Item onClick={this.toggleVisibility}><Icon name="sidebar" /></Menu.Item>
-                </Header>
 
+                </Header>
+               {this.state.isScrolled && <Menu.Item
+                    name='reviews'
+                    className="submission-item-menu-layer"
+                    onClick={this.handleItemClick}
+                >
+                    <div className="first-view centered">
+                        <div className="input-style center padding-to-center username-menu-layer">
+                            {this.renderSumbitBox("15%")}
+                            {this.renderSubmittedDropdown()}
+                            {this.renderMediaCheckbox()}
+                        </div>
+                    </div>
+                </Menu.Item>}
             </Menu>
         )
     }
 
+    // data.children[1].data.preview.reddit_video_preview.fallback_url
+
+
+
     renderSidebar() {
         let displayView = this.firstSubmission ? this.displaySecondView() : this.displayInitialView();
 
+        // let unsetSideBar = ""
+
         return (
-            <Sidebar.Pushable as={Segment}>
-                
+            <Sidebar.Pushable as={Segment}
+                className={"unset-sidebar-height"}>
+
                 <Sidebar
                     className="fixed top-padding top-position-padding dimmed"
                     as={Menu}
@@ -724,21 +805,21 @@ class RedditTitles extends Component {
                     visible={this.state.visible}
                     icon='labeled'
                     vertical inverted>
-                        <div>
-                    <Menu.Item name='grid'>
-                        {this.renderGridDropdownButton()}
-                    </Menu.Item>
+                    <div>
+                        <Menu.Item name='grid'>
+                            {this.renderGridDropdownButton()}
+                        </Menu.Item>
 
-                    <Menu.Item name='nsfw'>
-                        <span>{this.renderNSFWToggle()}</span>
-                    </Menu.Item>
+                        <Menu.Item name='nsfw'>
+                            <span>{this.renderNSFWToggle()}</span>
+                        </Menu.Item>
                     </div>
                 </Sidebar>
-                
+
                 <Sidebar.Pusher>
 
-                    <SemanticGrid>
-                        <SemanticGrid.Row>
+                    <SemanticGrid centered>
+                        <SemanticGrid.Row stretched>
                             <SemanticGrid.Column>
                                 <Segment basic
                                     className="background bottom top-padding">
