@@ -8,14 +8,16 @@ export const FETCH_USER_SUBMITTED_POSTS = (user) => {
             axios.get('https://www.reddit.com/user/' + user + '/submitted.json?limit=100')
 
                 .then(function (response) {
+
                     dispatch({
                         type: "SET_SUBMITTED_ELEMENTS",
                         submittedElements: response.data.data.children
                     })
+                    console.log("after")
                     resolve(response.data)
                 })
                 .catch(function (error) {
-                    
+
                     console.log(error)
 
                     dispatch({

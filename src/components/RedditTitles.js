@@ -4,14 +4,16 @@ import { render } from 'react-dom';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import toggleStyles from '../assets/Toggle.css';
+import {spreadURL} from './helpers/RedditHelperFunctions'
 import { Button, Form, FormGroup, FormControl, Grid, Row, Col, Image, DropdownButton, MenuItem, Carousel, Modal, Checkbox } from 'react-bootstrap';
 import Toggle from 'react-toggle';
 import PhotoCarousel from './PhotoCarousel';
 import PropTypes from 'prop-types';
-import { Menu, Item, Sidebar, Segment, Icon, Header, Sticky, Rail, Grid as SemanticGrid } from 'semantic-ui-react';
+import { Menu, Item, Sidebar, Segment, Icon, Header, Sticky, Rail, Grid as SemanticGrid, Dimmer, Loader } from 'semantic-ui-react';
 import { FETCH_USER_SUBMITTED_POSTS, FETCH_ADDITIONAL_USER_SUBMITTED_POSTS } from '../actions/Reddit'
 import _isNil from 'lodash/isNil'
 import _get from 'lodash/get'
+import _last from 'lodash/last'
 import {
     BrowserRouter as Router,
     Switch,
@@ -27,7 +29,9 @@ import {
 //categories
 //git uploading
 //similar picture removal
-//adding cookies
+// connect to redis to have storage of all added users
+// mobile design
+//loaders
 //with comments, you can match just paratheses first, then you can pull out actual link
 // videos, gifs, pics only
 //   paratheses
@@ -68,15 +72,15 @@ class RedditTitles extends Component {
     }
 
     componentWillMount() {
-        
+
         if (Object.keys(localStorage).length !== 0) {
-            let newList = [...new Set(!_isNil(localStorage.getItem("userList"))?localStorage.getItem("userList").split(","):"")]
-            
+            let newList = [...new Set(!_isNil(localStorage.getItem("userList")) ? localStorage.getItem("userList").split(",") : "")]
+
             this.setState({
                 userList: newList,
-                num: !_isNil(Number(localStorage.getItem("gridState")))?Number(localStorage.getItem("gridState")):0,
-                dropDownTitle: !_isNil(localStorage.getItem("gridStateTitle"))?(localStorage.getItem("gridStateTitle")):'',
-                nsfw: !_isNil(JSON.parse(localStorage.getItem("NSFW")))?(JSON.parse(localStorage.getItem("NSFW"))) : false
+                num: !_isNil(Number(localStorage.getItem("gridState"))) ? Number(localStorage.getItem("gridState")) : 0,
+                dropDownTitle: !_isNil(localStorage.getItem("gridStateTitle")) ? (localStorage.getItem("gridStateTitle")) : '',
+                nsfw: !_isNil(JSON.parse(localStorage.getItem("NSFW"))) ? (JSON.parse(localStorage.getItem("NSFW"))) : false
             })
         }
 
@@ -96,24 +100,19 @@ class RedditTitles extends Component {
 
         const scrolled = winScroll / height
 
-        // console.log(winScroll);
         if (scrolled > 0 && !this.state.isScrolled) {
             console.log(scrolled);
             this.setState({
                 isScrolled: scrolled > 0,
             })
         }
-        
+
         if (scrolled === 0 && this.state.isScrolled) {
             console.log(scrolled);
             this.setState({
                 isScrolled: false,
             })
         }
-        // console.log(height);
-        // this.setState({
-        //   theposition: scrolled,
-        // })
     }
 
     componentDidMount() {
@@ -148,7 +147,7 @@ class RedditTitles extends Component {
             user = urlUser
         }
         let response = await this.props.dispatch(FETCH_USER_SUBMITTED_POSTS(user))
-        this.retrievePage(response.data.children.pop())
+        this.retrievePage(_last(response.data.children))
         this.resetLocalState();
         this.createPhotoArray();
         this.setLocalStorage();
@@ -177,7 +176,7 @@ class RedditTitles extends Component {
             submittedElements: [...this.props.submittedElements, ...response.data.children]
         })
 
-        this.retrievePage(response.data.children.pop())
+        this.retrievePage(_last(response.data.children))
 
         this.createPhotoArray();
     }
@@ -243,54 +242,10 @@ class RedditTitles extends Component {
         });
     }
 
-    spreadURL = (option, link) => {
-
-        var urlStart = /.+?:\/\/[^\s]+\/\S+\./;
-        var urlEnd = /\w+$/
-        var gfycat2 = /gfycat/
-        var albumRegex = /[^ht][^/\/\imgur.co][^a\/]\w+(?!\w)/
-        var galleryRegex = /[^ht][^/\/\imgur.co][^gallery\/]\w+(?!\w)/
-
-
-        let regexEnd = link.match(urlEnd);
-        let regexStart = link.match(urlStart);
-        let gfycat = link.match(gfycat2);
-        let album = /imgur.com\/a\//.test(link);
-        let gallery = /imgur.com\/gallery\//.test(link);
-        let albumLinkParser = link.match(albumRegex);
-        let galleryParser = link.match(galleryRegex);
-
-        if (regexEnd === null) {
-
-        }
-
-        switch (option) {
-            case "end":
-                return regexEnd[0];
-            case "start":
-                return regexStart[0];
-            case "gallery":
-                return gallery;
-            case "album":
-                return album;
-            case "gfycat":
-                return gfycat;
-            case "albumRegex":
-                return albumLinkParser;
-            case "galleryRegex":
-                return galleryParser;
-            default:
-                break;
-        }
-    }
+    
 
 
     createPhotoArray = () => {
-        // let photoArray = this.state.photos;
-        // let set = new Set();
-
-
-        // set.add(JSON.stringify(field))
 
         return this.props.submittedElements.map((field, index) => {
             let imageURL = field.data.url;
@@ -302,13 +257,13 @@ class RedditTitles extends Component {
                 field.data.domain === "imgur.com") {
 
                 if (field.data.domain === "imgur.com" || field.data.domain === "m.imgur.com") {
-                    if (this.spreadURL("album", imageURL)) {
-                        this.retrieveAlbumPhotos(link, this.spreadURL("albumRegex", imageURL), field.data.over_18);
+                    if (spreadURL("album", imageURL)) {
+                        this.retrieveAlbumPhotos(link, spreadURL("albumRegex", imageURL), field.data.over_18);
                     }
-                    else if (this.spreadURL("gallery", imageURL)) {
-                        this.retrieveAlbumPhotos(link, this.spreadURL("galleryRegex", imageURL), field.data.over_18);
+                    else if (spreadURL("gallery", imageURL)) {
+                        this.retrieveAlbumPhotos(link, spreadURL("galleryRegex", imageURL), field.data.over_18);
                     }
-                    else if (this.spreadURL("end", imageURL) === "gifv") {
+                    else if (spreadURL("end", imageURL) === "gifv") {
                         this.addPhotosToState(imageURL, link, field.data.over_18);
                     }
                     else {
@@ -325,29 +280,26 @@ class RedditTitles extends Component {
                 }
 
             }
-            // else if (this.spreadURL("gfycat", imageURL) === "gfycat") {
+            // else if (spreadURL("gfycat", imageURL) === "gfycat") {
             //     debugger
-            //     regexStart = this.spreadURL("start", imageURL) + "mp4"
+            //     regexStart = spreadURL("start", imageURL) + "mp4"
             //     // photoArray.push({ regexStart, nsfw: field.data.over_18 })
             //     // this.addPhotosToState(photoArray);
 
 
             // }
             else if (field.data.domain === "redgifs.com") {
-                // debugger
                 let userName = imageURL.match(/[a-zA-Z0-9]+$/)
 
-                
-
                 if (!_isNil(field.data.preview)) {
-                    // debugger
-                    // imageURL
+
                     this.addPhotosToState(field.data.preview.reddit_video_preview.fallback_url, link, field.data.over_18);
 
                 }
 
             }
             else if (field.data.domain === "i.redd.it") {
+
                 this.addPhotosToState(field.data.url, link, field.data.over_18);
 
             }
@@ -413,8 +365,6 @@ class RedditTitles extends Component {
 
     renderMediaCheckbox() {
 
-        // if scrolled down, add the inline to checkbox
-        // inline={true}
         let inline = this.state.isScrolled
         return (
             <form>
@@ -455,11 +405,14 @@ class RedditTitles extends Component {
         )
     }
 
+    calcHeight(value) {
+        let numberOfLineBreaks = (value.match(/\n/g) || []).length;
+        let newHeight = 20 + numberOfLineBreaks * 20 + 12 + 2;
+        return newHeight;
+    }
+
     handleChange = (event) => {
-        // if(event.target.value.length>0 && event.target.value<=20){
         this.setState({ user: event.target.value.replace(" ", "") });
-        // }
-        // this.setState({ user: "dusenberrypie" });
     }
 
     handleSubmit = (event) => {
@@ -478,11 +431,20 @@ class RedditTitles extends Component {
         };
         if (video & this.state.displayGifs) {
             return this.renderGifv(centerImage, field.link, field.imageURL, index)
-        } else if (this.state.displayGifs && this.spreadURL("end", field.imageURL) === "gifv") {
-            let newLink = this.spreadURL("start", field.imageURL) + "mp4";
+        } else if (this.state.displayGifs && spreadURL("end", field.imageURL) === "gifv") {
+            let newLink = spreadURL("start", field.imageURL) + "mp4";
             return this.renderGifv(centerImage, field.link, newLink, index)
-        } else if (this.state.displayPics && this.spreadURL("end", field.imageURL) === "jpg" |
-            this.spreadURL("end", field.imageURL) === "png") {
+        } else if (this.state.displayGifs && spreadURL("end", field.imageURL) === "gif") {
+            // let newLink = spreadURL("start", field.imageURL) + "mp4";
+            // return this.renderGifv(centerImage, field.link, field.imageURL, index)
+            return (
+                <Col xs={this.state.num} md={this.state.num} key={index}>
+                    <br />
+                    <a href={field.link}><Image style={centerImage} src={field.imageURL} responsive /></a>
+                </Col>
+            )
+        } else if (this.state.displayPics && spreadURL("end", field.imageURL) === "jpg" |
+            spreadURL("end", field.imageURL) === "png") {
             return (
                 <Col xs={this.state.num} md={this.state.num} key={index}>
                     <br />
@@ -530,11 +492,12 @@ class RedditTitles extends Component {
     renderSumbitBox = (inputBoxWidth) => {
 
 
-        let fullScreenCssWidth = this.state.photos.length === 0 ? "initial-screen-input-box": "secondary-screen-input-box"
+        let fullScreenCssWidth = this.state.photos.length === 0 ? "initial-screen-input-box" : "secondary-screen-input-box"
         return (
             <Form onSubmit={this.handleSubmit} inline>
                 <FormGroup controlId="formInlineName">
                     <FormControl
+                        contentEditable
                         // style={{ minWidth: inputBoxWidth }}
                         className={fullScreenCssWidth}
                         type="text"
@@ -542,10 +505,11 @@ class RedditTitles extends Component {
                         placeholder="Username"
                         onChange={this.handleChange}
                         maxLength="20" />
-                    <button type="submit" value="Submit" className="submit-button">
+                    <input type="submit"value="Search"></input>
+                    {/* <button type="submit" value="Submit" className="submit-button">
                         <img src="../src/assets/images/arrow_right.png" alt="Submit" style={{ width: '28%' }}>
                         </img>
-                    </button>
+                    </button> */}
                 </FormGroup>
             </Form>
         )
@@ -573,6 +537,12 @@ class RedditTitles extends Component {
             return (
                 <div className="text-center">
                     This user doesn't have any photos.
+                    <Segment>
+      <Dimmer active>
+        <Loader content='Loading' />
+      </Dimmer>
+
+    </Segment>
                 </div>
             )
         } else if (error !== null) {
@@ -635,7 +605,6 @@ class RedditTitles extends Component {
         )
     }
 
-
     renderGridDropdownButton() {
         return (
             <DropdownButton
@@ -652,7 +621,7 @@ class RedditTitles extends Component {
 
     renderNSFWToggle() {
         let Checkbox = this.state.nsfw ? this.renderCheckbox() : null;
-        
+
         return (
             <span className="nsfw_center nsfw_group">
                 <span>nsfw: </span>
@@ -712,7 +681,6 @@ class RedditTitles extends Component {
         this.retrieveMoreMedia()
     }
 
-
     toggleVisibility = () => {
         this.setState({ visible: !this.state.visible })
     }
@@ -762,16 +730,14 @@ class RedditTitles extends Component {
     renderMenu() {
         return (
             <Menu className="fixed ">
-
                 <Header>
                     <Menu.Item onClick={this.toggleVisibility}><Icon name="sidebar" /></Menu.Item>
 
                 </Header>
-               {this.state.isScrolled && <Menu.Item
+                {this.state.isScrolled && <Menu.Item
                     name='reviews'
                     className="submission-item-menu-layer"
-                    onClick={this.handleItemClick}
-                >
+                    onClick={this.handleItemClick}>
                     <div className="first-view centered">
                         <div className="input-style center padding-to-center username-menu-layer">
                             {this.renderSumbitBox("15%")}
@@ -791,12 +757,9 @@ class RedditTitles extends Component {
     renderSidebar() {
         let displayView = this.firstSubmission ? this.displaySecondView() : this.displayInitialView();
 
-        // let unsetSideBar = ""
-
         return (
             <Sidebar.Pushable as={Segment}
                 className={"unset-sidebar-height"}>
-
                 <Sidebar
                     className="fixed top-padding top-position-padding dimmed"
                     as={Menu}
@@ -815,9 +778,7 @@ class RedditTitles extends Component {
                         </Menu.Item>
                     </div>
                 </Sidebar>
-
                 <Sidebar.Pusher>
-
                     <SemanticGrid centered>
                         <SemanticGrid.Row stretched>
                             <SemanticGrid.Column>
@@ -834,7 +795,6 @@ class RedditTitles extends Component {
     }
 
     render() {
-        let { submittedElements } = this.props;
 
         let Carousel = this.state.renderCarousel ? <PhotoCarousel photos={this.state.photos} /> : null;
         return (

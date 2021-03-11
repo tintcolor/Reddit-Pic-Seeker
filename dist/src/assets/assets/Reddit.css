@@ -42,7 +42,7 @@ form {
 }
 
 .padding-to-center {
-    padding-left: 105px;
+    /* padding-left: 105px; */
 }
 
 .float_right {
@@ -133,7 +133,7 @@ section .padding-to-center .input-style .form-control .form-inline .form-group {
 }
 
  .form-control.secondary-screen-input-box {
-    width: 30em;
+    width: 100%;
 }
 
 
@@ -188,7 +188,7 @@ section .float_right {
 }
 
 .dropdown-submitted {
-    margin-left: -8%;
+    /* margin-left: -8%; */
 }
 
 .dropdown-grid {
@@ -257,6 +257,35 @@ font-size: -webkit-xxx-large; */
 
 }
 
+.pushable:not(body) {
+    transform: none;
+  }
+  
+  .pushable:not(body) > .ui.sidebar,
+  .pushable:not(body) > .fixed,
+  .pushable:not(body) > .pusher:after {
+    position: fixed;
+  }
+
+/* input[type="text"] {
+    width: 200px;
+    height: 20px;
+    padding-right: 50px;
+}
+*/
+input[type="submit"] {
+    display: block;
+    margin: 5px auto;
+} 
+
+section .input-style .form-control {
+    font-size: 3vw;
+}
+
+.input-style .form-inline .form-group {
+    width: 100%;
+}
+
 .pushable>.pusher {
     min-height: 100%;
 }
@@ -296,7 +325,7 @@ font-size: -webkit-xxx-large; */
     }
 
     .padding-to-center {
-        padding-left: initial;
+        /* padding-left: initial; */
     }
 
     section .input-style .form-control.initial-screen-input-box{
@@ -311,4 +340,8 @@ font-size: -webkit-xxx-large; */
         height: initial !important;
     
     }
+  }
+
+  footer{
+    text-align: center;
   }
