@@ -4,7 +4,7 @@ import { render } from 'react-dom';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import toggleStyles from '../assets/Toggle.css';
-import {spreadURL} from './helpers/RedditHelperFunctions'
+import { spreadURL } from './helpers/RedditHelperFunctions'
 import { Button, Form, FormGroup, FormControl, Grid, Row, Col, Image, DropdownButton, MenuItem, Carousel, Modal, Checkbox } from 'react-bootstrap';
 import Toggle from 'react-toggle';
 import PhotoCarousel from './PhotoCarousel';
@@ -117,7 +117,12 @@ class RedditTitles extends Component {
 
     componentDidMount() {
         window.addEventListener('scroll', this.listenToScroll)
-        const match = matchPath(this.props.history.location.pathname, {
+        this.updateURL(this.props.history.location.pathname)
+    }
+
+    updateURL=(path)=> {
+        debugger
+        const match = matchPath(path, {
             path: '/:param',
             exact: true,
             strict: false
@@ -242,7 +247,7 @@ class RedditTitles extends Component {
         });
     }
 
-    
+
 
 
     createPhotoArray = () => {
@@ -380,7 +385,7 @@ class RedditTitles extends Component {
                     name="displayGifs"
                     onChange={this.handleCheckboxMediaChange}
                     checked={this.state.displayGifs}>
-                    Gifs
+                    Gifs/Videos
     </Checkbox>
             </form>
 
@@ -396,6 +401,7 @@ class RedditTitles extends Component {
                         <video
                             preload="auto"
                             // autoPlay="autoplay"
+                            controls
                             loop="loop"
                             style={{ maxWidth: 100 + '%' }}
                             src={imageURL} />
@@ -505,7 +511,7 @@ class RedditTitles extends Component {
                         placeholder="Username"
                         onChange={this.handleChange}
                         maxLength="20" />
-                    <input type="submit"value="Search"></input>
+                    <input type="submit" value="Search"></input>
                     {/* <button type="submit" value="Submit" className="submit-button">
                         <img src="../src/assets/images/arrow_right.png" alt="Submit" style={{ width: '28%' }}>
                         </img>
@@ -524,7 +530,11 @@ class RedditTitles extends Component {
             if (this.firstSubmission === true) {
                 return (
                     <div className="text-center">
-                        This person has no submissons.
+                        {/* This person has no submissons. */}
+                        <Dimmer active>
+                            <Loader content='Loading' />
+                        </Dimmer>
+
                     </div>
                 )
             }
@@ -538,11 +548,11 @@ class RedditTitles extends Component {
                 <div className="text-center">
                     This user doesn't have any photos.
                     <Segment>
-      <Dimmer active>
-        <Loader content='Loading' />
-      </Dimmer>
+                        <Dimmer active>
+                            <Loader content='Loading' />
+                        </Dimmer>
 
-    </Segment>
+                    </Segment>
                 </div>
             )
         } else if (error !== null) {
@@ -688,15 +698,13 @@ class RedditTitles extends Component {
     displayInitialView() {
         return (
             <div className="first-view centered">
-                <section>
-                    <div className="input-style center padding-to-center">
-                        {this.renderSumbitBox("85%")}
-                        <div className="dropdown-submitted">
-                            {this.renderSubmittedDropdown()}
-                            {this.renderMediaCheckbox()}
-                        </div>
+                <div className="input-style center padding-to-center">
+                    {this.renderSumbitBox("85%")}
+                    <div className="dropdown-submitted">
+                        {this.renderSubmittedDropdown()}
+                        {this.renderMediaCheckbox()}
                     </div>
-                </section>
+                </div>
             </div>
         )
     }
@@ -728,24 +736,31 @@ class RedditTitles extends Component {
     }
 
     renderMenu() {
+
+        let topMenu = this.state.isScrolled ? <Menu.Item
+            className="submission-item-menu-layer"
+            onClick={this.handleItemClick}>
+            <div className="first-view centered">
+                <div className="input-style center padding-to-center username-menu-layer">
+                    {this.renderSumbitBox("15%")}
+                    {this.renderSubmittedDropdown()}
+                    {this.renderMediaCheckbox()}
+                </div>
+            </div>
+        </Menu.Item> : <Menu.Item onClick={()=>{
+       this.setState({ user: "" });
+    //    this.firstSubmission = true;
+    //    this.retrievePhotos();
+       this.changeURLPerUser()
+        }}
+            className="submission-item-menu-layer"
+          ><span>Reddit Pic Seeker</span></Menu.Item>
         return (
-            <Menu className="fixed ">
+            <Menu className="fixed " secondary>
                 <Header>
                     <Menu.Item onClick={this.toggleVisibility}><Icon name="sidebar" /></Menu.Item>
-
                 </Header>
-                {this.state.isScrolled && <Menu.Item
-                    name='reviews'
-                    className="submission-item-menu-layer"
-                    onClick={this.handleItemClick}>
-                    <div className="first-view centered">
-                        <div className="input-style center padding-to-center username-menu-layer">
-                            {this.renderSumbitBox("15%")}
-                            {this.renderSubmittedDropdown()}
-                            {this.renderMediaCheckbox()}
-                        </div>
-                    </div>
-                </Menu.Item>}
+                {topMenu}
             </Menu>
         )
     }

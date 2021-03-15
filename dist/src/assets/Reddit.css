@@ -1,3 +1,7 @@
+html {
+    padding: 15px;
+}
+
 body {
     font-family: 'Roboto', sans-serif;
     text-transform: lowercase;
@@ -18,7 +22,7 @@ input {
 }
 
 form {
-    width: 100%;
+    /* width: 100%; */
     /* margin: 0 auto!important;
     text-align: center; */
     /* position: fixed; */
@@ -42,7 +46,7 @@ form {
 }
 
 .padding-to-center {
-    padding-left: 105px;
+    /* padding-left: 105px; */
 }
 
 .float_right {
@@ -66,14 +70,26 @@ form {
 
 form .dropdown {
     position: relative;
+    
 }
 
-header {
-    padding: 13px;
+.ui.menu .item.submission-item-menu-layer {
+    margin: 0 auto;
+    padding-right: 7em;
+}
+
+form .dropdown .menu{
+    position: relative;
+    padding-right: 24px;
+}
+
+.ui.header {
+    /* padding: 13px;
     height: 220px;
     overflow: hidden;
     z-index: 1000;
-    width: 100%;
+    width: 100%; */
+    margin: 0;
 }
 
 .second-view header {
@@ -113,6 +129,24 @@ header {
     text-align: center;
 }
 
+section .padding-to-center .input-style .form-control .form-inline .form-group {
+    /* display: inline-flex; */
+}
+
+  .form-group .initial-screen-input-box.form-control {
+    width: 100%;
+    max-width: 38%;
+    display: inline-flex;
+}
+
+ .form-control.secondary-screen-input-box {
+    width: 100%;
+}
+
+.ui.secondary.fixed.menu {
+    background: white;
+}
+
 button {
     border: none;
     color: #999999;
@@ -127,7 +161,7 @@ section {
 
 section .input-style .form-control {
     display: block;
-    width: 82%;
+    /* width: 82%; */
     height: initial;
     font-size: -webkit-xxx-large;
 }
@@ -135,6 +169,16 @@ section .input-style .form-control {
 .fixed-centered-section {
     /* position: fixed;
     right: 261px; */
+    width: 40em;
+}
+
+.username-menu-layer {
+    display: inline-flex;
+    /* display: contents; */
+}
+
+.fixed-centered-section form label {
+    width: 24em;
 }
 
 section .float_right {
@@ -142,9 +186,9 @@ section .float_right {
 }
 
 .submit-button {
-    position: absolute;
+    /* position: absolute;
     top: 27px;
-    right: 0;
+    right: 0; */
     width: 8.4em;
 }
 
@@ -153,17 +197,22 @@ section .float_right {
 }
 
 .dropdown-submitted {
-    margin-left: -8%;
+    /* margin-left: -8%; */
 }
 
 .dropdown-grid {
     /* position: fixed; */
+    padding-top: 12px;
+}
+
+.submitted-dropdown {
+    padding-right: 12px;
 }
 
 .second-view .submit-button {
     position: absolute;
-    top: 2px;
-    right: -84px;
+    /* top: 2px; */
+    /* right: -84px; */
     width: 8.4em;
 }
 
@@ -208,9 +257,42 @@ font-size: -webkit-xxx-large; */
     border-radius: 0;
 }
 
-.pushable{
-    height: unset !important;
+.pushable {
     overflow-y: hidden;
+}
+
+.unset-sidebar-height {
+    height: unset !important;
+
+}
+
+.pushable:not(body) {
+    transform: none;
+  }
+  
+  .pushable:not(body) > .ui.sidebar,
+  .pushable:not(body) > .fixed,
+  .pushable:not(body) > .pusher:after {
+    position: fixed;
+  }
+
+/* input[type="text"] {
+    width: 200px;
+    height: 20px;
+    padding-right: 50px;
+}
+*/
+input[type="submit"] {
+    display: block;
+    margin: 5px auto;
+} 
+
+section .input-style .form-control {
+    font-size: 3vw;
+}
+
+.input-style .form-inline .form-group {
+    width: 100%;
 }
 
 .pushable>.pusher {
@@ -228,3 +310,47 @@ font-size: -webkit-xxx-large; */
 .top-position-padding {
     top: 3.7em!important;
 }
+
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+
+    .first-view .centered{
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        height: 16em;
+    }
+
+    .pusher .ui .row {
+        margin: 0
+    }
+        .column {
+      /* margin: 1em 2em; */
+      display: none;
+    }
+
+    .padding-to-center {
+        /* padding-left: initial; */
+    }
+
+    section .input-style .form-control.initial-screen-input-box{
+        width: 100%;
+    }
+
+    .submitted-dropdown {
+        padding-right: initial;
+    }
+
+    .unset-sidebar-height {
+        height: initial !important;
+    
+    }
+  }
+
+  footer{
+    text-align: center;
+  }

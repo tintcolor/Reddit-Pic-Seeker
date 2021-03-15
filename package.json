@@ -53,7 +53,7 @@
     "redux-logger": "^3.0.6",
     "redux-promise-middleware": "^5.0.0",
     "redux-thunk": "^2.2.0",
-    "semantic-ui-react": "^2.0.0",
+    "semantic-ui-react": "^2.0.3",
     "snapsvg-cjs": "0.0.6",
     "style-loader": "^0.20.1",
     "tumblr.js": "^2.0.0",

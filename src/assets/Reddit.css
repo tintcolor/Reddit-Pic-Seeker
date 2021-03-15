@@ -1,3 +1,7 @@
+html {
+    padding: 15px;
+}
+
 body {
     font-family: 'Roboto', sans-serif;
     text-transform: lowercase;
@@ -69,8 +73,9 @@ form .dropdown {
     
 }
 
-.submission-item-menu-layer {
-    margin:auto;
+.ui.menu .item.submission-item-menu-layer {
+    margin: 0 auto;
+    padding-right: 7em;
 }
 
 form .dropdown .menu{
@@ -78,12 +83,13 @@ form .dropdown .menu{
     padding-right: 24px;
 }
 
-header {
-    padding: 13px;
+.ui.header {
+    /* padding: 13px;
     height: 220px;
     overflow: hidden;
     z-index: 1000;
-    width: 100%;
+    width: 100%; */
+    margin: 0;
 }
 
 .second-view header {
@@ -128,7 +134,8 @@ section .padding-to-center .input-style .form-control .form-inline .form-group {
 }
 
   .form-group .initial-screen-input-box.form-control {
-    width: 21em;
+    width: 100%;
+    max-width: 38%;
     display: inline-flex;
 }
 
@@ -136,7 +143,9 @@ section .padding-to-center .input-style .form-control .form-inline .form-group {
     width: 100%;
 }
 
-
+.ui.secondary.fixed.menu {
+    background: white;
+}
 
 button {
     border: none;

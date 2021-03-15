@@ -8802,7 +8802,7 @@ function getTrueOffsetParent(element) {
 
 
 function getContainingBlock(element) {
-  var isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+  var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') !== -1;
   var currentNode = Object(getParentNode["a" /* default */])(element);
 
   while (Object(instanceOf["b" /* isHTMLElement */])(currentNode) && ['html', 'body'].indexOf(Object(getNodeName["a" /* default */])(currentNode)) < 0) {
@@ -8810,7 +8810,7 @@ function getContainingBlock(element) {
     // create a containing block.
     // https://developer.mozilla.org/en-US/docs/Web/CSS/Containing_block#identifying_the_containing_block
 
-    if (css.transform !== 'none' || css.perspective !== 'none' || css.contain === 'paint' || ['transform', 'perspective'].includes(css.willChange) || isFirefox && css.willChange === 'filter' || isFirefox && css.filter && css.filter !== 'none') {
+    if (css.transform !== 'none' || css.perspective !== 'none' || css.contain === 'paint' || ['transform', 'perspective'].indexOf(css.willChange) !== -1 || isFirefox && css.willChange === 'filter' || isFirefox && css.filter && css.filter !== 'none') {
       return currentNode;
     } else {
       currentNode = currentNode.parentNode;
@@ -83600,6 +83600,20 @@ var RedditTitles = function (_Component) {
             }
         };
 
+        _this.updateURL = function (path) {
+            debugger;
+            var match = (0, _reactRouterDom.matchPath)(path, {
+                path: '/:param',
+                exact: true,
+                strict: false
+            });
+
+            if (match) {
+                var id = match.params.param;
+                _this.fetchData(id);
+            }
+        };
+
         _this.fetchData = function (id) {
 
             _this.setState({
@@ -83894,16 +83908,7 @@ var RedditTitles = function (_Component) {
         key: 'componentDidMount',
         value: function componentDidMount() {
             window.addEventListener('scroll', this.listenToScroll);
-            var match = (0, _reactRouterDom.matchPath)(this.props.history.location.pathname, {
-                path: '/:param',
-                exact: true,
-                strict: false
-            });
-
-            if (match) {
-                var id = match.params.param;
-                this.fetchData(id);
-            }
+            this.updateURL(this.props.history.location.pathname);
         }
     }, {
         key: 'retrievePage',
@@ -83993,7 +83998,7 @@ var RedditTitles = function (_Component) {
                         name: 'displayGifs',
                         onChange: this.handleCheckboxMediaChange,
                         checked: this.state.displayGifs },
-                    'Gifs'
+                    'Gifs/Videos'
                 )
             );
         }
@@ -84013,7 +84018,8 @@ var RedditTitles = function (_Component) {
                         _react2.default.createElement('video', {
                             preload: 'auto'
                             // autoPlay="autoplay"
-                            , loop: 'loop',
+                            , controls: true,
+                            loop: 'loop',
                             style: { maxWidth: 100 + '%' },
                             src: imageURL })
                     )
@@ -84104,7 +84110,11 @@ var RedditTitles = function (_Component) {
                     return _react2.default.createElement(
                         'div',
                         { className: 'text-center' },
-                        'This person has no submissons.'
+                        _react2.default.createElement(
+                            _semanticUiReact.Dimmer,
+                            { active: true },
+                            _react2.default.createElement(_semanticUiReact.Loader, { content: 'Loading' })
+                        )
                     );
                 }
                 return _react2.default.createElement(
@@ -84331,18 +84341,14 @@ var RedditTitles = function (_Component) {
                 'div',
                 { className: 'first-view centered' },
                 _react2.default.createElement(
-                    'section',
-                    null,
+                    'div',
+                    { className: 'input-style center padding-to-center' },
+                    this.renderSumbitBox("85%"),
                     _react2.default.createElement(
                         'div',
-                        { className: 'input-style center padding-to-center' },
-                        this.renderSumbitBox("85%"),
-                        _react2.default.createElement(
-                            'div',
-                            { className: 'dropdown-submitted' },
-                            this.renderSubmittedDropdown(),
-                            this.renderMediaCheckbox()
-                        )
+                        { className: 'dropdown-submitted' },
+                        this.renderSubmittedDropdown(),
+                        this.renderMediaCheckbox()
                     )
                 )
             );
@@ -84388,9 +84394,43 @@ var RedditTitles = function (_Component) {
     }, {
         key: 'renderMenu',
         value: function renderMenu() {
+            var _this8 = this;
+
+            var topMenu = this.state.isScrolled ? _react2.default.createElement(
+                _semanticUiReact.Menu.Item,
+                {
+                    className: 'submission-item-menu-layer',
+                    onClick: this.handleItemClick },
+                _react2.default.createElement(
+                    'div',
+                    { className: 'first-view centered' },
+                    _react2.default.createElement(
+                        'div',
+                        { className: 'input-style center padding-to-center username-menu-layer' },
+                        this.renderSumbitBox("15%"),
+                        this.renderSubmittedDropdown(),
+                        this.renderMediaCheckbox()
+                    )
+                )
+            ) : _react2.default.createElement(
+                _semanticUiReact.Menu.Item,
+                { onClick: function onClick() {
+                        _this8.setState({ user: "" });
+                        //    this.firstSubmission = true;
+                        //    this.retrievePhotos();
+                        _this8.changeURLPerUser();
+                    },
+                    className: 'submission-item-menu-layer'
+                },
+                _react2.default.createElement(
+                    'span',
+                    null,
+                    'Reddit Pic Seeker'
+                )
+            );
             return _react2.default.createElement(
                 _semanticUiReact.Menu,
-                { className: 'fixed ' },
+                { className: 'fixed ', secondary: true },
                 _react2.default.createElement(
                     _semanticUiReact.Header,
                     null,
@@ -84400,24 +84440,7 @@ var RedditTitles = function (_Component) {
                         _react2.default.createElement(_semanticUiReact.Icon, { name: 'sidebar' })
                     )
                 ),
-                this.state.isScrolled && _react2.default.createElement(
-                    _semanticUiReact.Menu.Item,
-                    {
-                        name: 'reviews',
-                        className: 'submission-item-menu-layer',
-                        onClick: this.handleItemClick },
-                    _react2.default.createElement(
-                        'div',
-                        { className: 'first-view centered' },
-                        _react2.default.createElement(
-                            'div',
-                            { className: 'input-style center padding-to-center username-menu-layer' },
-                            this.renderSumbitBox("15%"),
-                            this.renderSubmittedDropdown(),
-                            this.renderMediaCheckbox()
-                        )
-                    )
-                )
+                topMenu
             );
         }
 
@@ -102607,10 +102630,6 @@ var lib_createPopper = __webpack_require__(307);
 
 
 
-/*:: export type * from './types'; */
-
-/*;; export * from './types'; */
-
 var defaultModifiers = [eventListeners, modifiers_popperOffsets, computeStyles["a" /* default */], modifiers_applyStyles];
 var popper_lite_createPopper = /*#__PURE__*/Object(lib_createPopper["a" /* popperGenerator */])({
   defaultModifiers: defaultModifiers
@@ -102628,10 +102647,6 @@ var popper_lite_createPopper = /*#__PURE__*/Object(lib_createPopper["a" /* poppe
 
 
 
-/*:: export type * from './types'; */
-
-/*;; export * from './types'; */
-
 var popper_defaultModifiers = [eventListeners, modifiers_popperOffsets, computeStyles["a" /* default */], modifiers_applyStyles, modifiers_offset, modifiers_flip, modifiers_preventOverflow, arrow["a" /* default */], modifiers_hide];
 var popper_createPopper = /*#__PURE__*/Object(lib_createPopper["a" /* popperGenerator */])({
   defaultModifiers: popper_defaultModifiers
@@ -102643,9 +102658,6 @@ var popper_createPopper = /*#__PURE__*/Object(lib_createPopper["a" /* popperGene
 
 
 // CONCATENATED MODULE: ./node_modules/@popperjs/core/lib/index.js
-/*:: export type * from './types'; */
-
-/*;; export * from './types'; */
 
  // eslint-disable-next-line import/no-unused-modules
 
@@ -109691,7 +109703,7 @@ if(false) {
 var ___CSS_LOADER_API_IMPORT___ = __webpack_require__(384);
 exports = ___CSS_LOADER_API_IMPORT___(false);
 // Module
-exports.push([module.i, "body {\r\n    font-family: 'Roboto', sans-serif;\r\n    text-transform: lowercase;\r\n    letter-spacing: 3px;\r\n}\r\n\r\n.full-height {\r\n    height: 100vh;\r\n}\r\n\r\n.redditImages {\r\n    /* width: 14%; */\r\n}\r\n\r\ninput {\r\n    text-transform: lowercase;\r\n    letter-spacing: 8px;\r\n}\r\n\r\nform {\r\n    /* width: 100%; */\r\n    /* margin: 0 auto!important;\r\n    text-align: center; */\r\n    /* position: fixed; */\r\n    z-index: 999;\r\n}\r\n\r\n.bootstrap-switch {\r\n    margin: auto 0!important;\r\n    text-align: center!important;\r\n    width: auto!important;\r\n}\r\n\r\n.bootstrap-switch-container {\r\n    margin: inherit!important;\r\n    width: inherit!important;\r\n}\r\n\r\n.center {\r\n    margin: 0 auto;\r\n    text-align: center;\r\n}\r\n\r\n.padding-to-center {\r\n    /* padding-left: 105px; */\r\n}\r\n\r\n.float_right {\r\n    float: right;\r\n}\r\n\r\n.nsfw_group {\r\n    padding: 0 20px 0 0;\r\n    width: 10%;\r\n}\r\n\r\n.nsfw_center {\r\n    text-align: center;\r\n}\r\n\r\n.dropdown-grid .dropdown {\r\n    /* text-align: center; */\r\n    /* float: left; */\r\n    /* z-index: 1000; */\r\n}\r\n\r\nform .dropdown {\r\n    position: relative;\r\n    \r\n}\r\n\r\n.submission-item-menu-layer {\r\n    margin:auto;\r\n}\r\n\r\nform .dropdown .menu{\r\n    position: relative;\r\n    padding-right: 24px;\r\n}\r\n\r\nheader {\r\n    padding: 13px;\r\n    height: 220px;\r\n    overflow: hidden;\r\n    z-index: 1000;\r\n    width: 100%;\r\n}\r\n\r\n.second-view header {\r\n    position: fixed;\r\n    height: 160px;\r\n    background: #a52a2b;\r\n}\r\n\r\n.spacer {\r\n    padding: 10px;\r\n}\r\n\r\n.carousel {\r\n    width: 32% !important;\r\n}\r\n\r\n.pageTitle {}\r\n\r\n.text-center {\r\n    text-align: center;\r\n    color: black;\r\n    font-size: 36px;\r\n}\r\n\r\n.container-fluid {\r\n    padding: 10px;\r\n    overflow-x: hidden;\r\n}\r\n\r\n.form-control {\r\n    -webkit-box-shadow: none!important;\r\n    box-shadow: none!important;\r\n    -webkit-transition: none!important;\r\n    transition: none!important;\r\n    border: inherit;\r\n    border-bottom: 1px solid #ccc;\r\n    text-align: center;\r\n}\r\n\r\nsection .padding-to-center .input-style .form-control .form-inline .form-group {\r\n    /* display: inline-flex; */\r\n}\r\n\r\n  .form-group .initial-screen-input-box.form-control {\r\n    width: 21em;\r\n    display: inline-flex;\r\n}\r\n\r\n .form-control.secondary-screen-input-box {\r\n    width: 100%;\r\n}\r\n\r\n\r\n\r\nbutton {\r\n    border: none;\r\n    color: #999999;\r\n    background: none;\r\n    text-transform: lowercase;\r\n    letter-spacing: 3px;\r\n}\r\n\r\nsection {\r\n    top: 50%;\r\n}\r\n\r\nsection .input-style .form-control {\r\n    display: block;\r\n    /* width: 82%; */\r\n    height: initial;\r\n    font-size: -webkit-xxx-large;\r\n}\r\n\r\n.fixed-centered-section {\r\n    /* position: fixed;\r\n    right: 261px; */\r\n    width: 40em;\r\n}\r\n\r\n.username-menu-layer {\r\n    display: inline-flex;\r\n    /* display: contents; */\r\n}\r\n\r\n.fixed-centered-section form label {\r\n    width: 24em;\r\n}\r\n\r\nsection .float_right {\r\n    float: none\r\n}\r\n\r\n.submit-button {\r\n    /* position: absolute;\r\n    top: 27px;\r\n    right: 0; */\r\n    width: 8.4em;\r\n}\r\n\r\n.submit-button:focus {\r\n    outline: none;\r\n}\r\n\r\n.dropdown-submitted {\r\n    /* margin-left: -8%; */\r\n}\r\n\r\n.dropdown-grid {\r\n    /* position: fixed; */\r\n    padding-top: 12px;\r\n}\r\n\r\n.submitted-dropdown {\r\n    padding-right: 12px;\r\n}\r\n\r\n.second-view .submit-button {\r\n    position: absolute;\r\n    /* top: 2px; */\r\n    /* right: -84px; */\r\n    width: 8.4em;\r\n}\r\n\r\n.second-view .fixed-header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    flex-wrap: nowrap;\r\n    justify-content: space-between;\r\n    box-shadow: 0 1px 2px -2 rgba(34, 36, 38, .15);\r\n    border-bottom: 1px solid rgba(34, 36, 38, .15);\r\n}\r\n\r\n.second-view .center {\r\n    /* margin: inherit; */\r\n}\r\n\r\n.submitted-items {\r\n    max-height: 8em;\r\n    overflow-y: scroll;\r\n    border-bottom: 1px black solid;\r\n    padding: 3px 20px;\r\n}\r\n\r\n.dropdown-menu {\r\n    width: 100%;\r\n    z-index:10000;\r\n}\r\n\r\n.dropdown-menu::-webkit-scrollbar {\r\n    display: none;\r\n}\r\n\r\n/* \r\nwidth: 85%;\r\nheight: initial;\r\nfont-size: -webkit-xxx-large; */\r\n\r\n.ui.segment {\r\n    box-shadow: none;\r\n    border: none;\r\n    margin-top: 0;\r\n    border-radius: 0;\r\n}\r\n\r\n.pushable {\r\n    overflow-y: hidden;\r\n}\r\n\r\n.unset-sidebar-height {\r\n    height: unset !important;\r\n\r\n}\r\n\r\n.pushable:not(body) {\r\n    transform: none;\r\n  }\r\n  \r\n  .pushable:not(body) > .ui.sidebar,\r\n  .pushable:not(body) > .fixed,\r\n  .pushable:not(body) > .pusher:after {\r\n    position: fixed;\r\n  }\r\n\r\n/* input[type=\"text\"] {\r\n    width: 200px;\r\n    height: 20px;\r\n    padding-right: 50px;\r\n}\r\n*/\r\ninput[type=\"submit\"] {\r\n    display: block;\r\n    margin: 5px auto;\r\n} \r\n\r\nsection .input-style .form-control {\r\n    font-size: 3vw;\r\n}\r\n\r\n.input-style .form-inline .form-group {\r\n    width: 100%;\r\n}\r\n\r\n.pushable>.pusher {\r\n    min-height: 100%;\r\n}\r\n\r\n.background {\r\n    background: brown;\r\n}\r\n\r\n.top-padding {\r\n    margin-top: 3.7em!important\r\n}\r\n\r\n.top-position-padding {\r\n    top: 3.7em!important;\r\n}\r\n\r\n\r\n/* RESPONSIVE */\r\n@media (max-width: 600px) {\r\n\r\n    .first-view .centered{\r\n        position: absolute;\r\n        top: 0;\r\n        bottom: 0;\r\n        left: 0;\r\n        right: 0;\r\n        margin: auto;\r\n        height: 16em;\r\n    }\r\n\r\n    .pusher .ui .row {\r\n        margin: 0\r\n    }\r\n        .column {\r\n      /* margin: 1em 2em; */\r\n      display: none;\r\n    }\r\n\r\n    .padding-to-center {\r\n        /* padding-left: initial; */\r\n    }\r\n\r\n    section .input-style .form-control.initial-screen-input-box{\r\n        width: 100%;\r\n    }\r\n\r\n    .submitted-dropdown {\r\n        padding-right: initial;\r\n    }\r\n\r\n    .unset-sidebar-height {\r\n        height: initial !important;\r\n    \r\n    }\r\n  }\r\n\r\n  footer{\r\n    text-align: center;\r\n  }", ""]);
+exports.push([module.i, "html {\r\n    padding: 15px;\r\n}\r\n\r\nbody {\r\n    font-family: 'Roboto', sans-serif;\r\n    text-transform: lowercase;\r\n    letter-spacing: 3px;\r\n}\r\n\r\n.full-height {\r\n    height: 100vh;\r\n}\r\n\r\n.redditImages {\r\n    /* width: 14%; */\r\n}\r\n\r\ninput {\r\n    text-transform: lowercase;\r\n    letter-spacing: 8px;\r\n}\r\n\r\nform {\r\n    /* width: 100%; */\r\n    /* margin: 0 auto!important;\r\n    text-align: center; */\r\n    /* position: fixed; */\r\n    z-index: 999;\r\n}\r\n\r\n.bootstrap-switch {\r\n    margin: auto 0!important;\r\n    text-align: center!important;\r\n    width: auto!important;\r\n}\r\n\r\n.bootstrap-switch-container {\r\n    margin: inherit!important;\r\n    width: inherit!important;\r\n}\r\n\r\n.center {\r\n    margin: 0 auto;\r\n    text-align: center;\r\n}\r\n\r\n.padding-to-center {\r\n    /* padding-left: 105px; */\r\n}\r\n\r\n.float_right {\r\n    float: right;\r\n}\r\n\r\n.nsfw_group {\r\n    padding: 0 20px 0 0;\r\n    width: 10%;\r\n}\r\n\r\n.nsfw_center {\r\n    text-align: center;\r\n}\r\n\r\n.dropdown-grid .dropdown {\r\n    /* text-align: center; */\r\n    /* float: left; */\r\n    /* z-index: 1000; */\r\n}\r\n\r\nform .dropdown {\r\n    position: relative;\r\n    \r\n}\r\n\r\n.ui.menu .item.submission-item-menu-layer {\r\n    margin: 0 auto;\r\n    padding-right: 7em;\r\n}\r\n\r\nform .dropdown .menu{\r\n    position: relative;\r\n    padding-right: 24px;\r\n}\r\n\r\n.ui.header {\r\n    /* padding: 13px;\r\n    height: 220px;\r\n    overflow: hidden;\r\n    z-index: 1000;\r\n    width: 100%; */\r\n    margin: 0;\r\n}\r\n\r\n.second-view header {\r\n    position: fixed;\r\n    height: 160px;\r\n    background: #a52a2b;\r\n}\r\n\r\n.spacer {\r\n    padding: 10px;\r\n}\r\n\r\n.carousel {\r\n    width: 32% !important;\r\n}\r\n\r\n.pageTitle {}\r\n\r\n.text-center {\r\n    text-align: center;\r\n    color: black;\r\n    font-size: 36px;\r\n}\r\n\r\n.container-fluid {\r\n    padding: 10px;\r\n    overflow-x: hidden;\r\n}\r\n\r\n.form-control {\r\n    -webkit-box-shadow: none!important;\r\n    box-shadow: none!important;\r\n    -webkit-transition: none!important;\r\n    transition: none!important;\r\n    border: inherit;\r\n    border-bottom: 1px solid #ccc;\r\n    text-align: center;\r\n}\r\n\r\nsection .padding-to-center .input-style .form-control .form-inline .form-group {\r\n    /* display: inline-flex; */\r\n}\r\n\r\n  .form-group .initial-screen-input-box.form-control {\r\n    width: 100%;\r\n    max-width: 38%;\r\n    display: inline-flex;\r\n}\r\n\r\n .form-control.secondary-screen-input-box {\r\n    width: 100%;\r\n}\r\n\r\n.ui.secondary.fixed.menu {\r\n    background: white;\r\n}\r\n\r\nbutton {\r\n    border: none;\r\n    color: #999999;\r\n    background: none;\r\n    text-transform: lowercase;\r\n    letter-spacing: 3px;\r\n}\r\n\r\nsection {\r\n    top: 50%;\r\n}\r\n\r\nsection .input-style .form-control {\r\n    display: block;\r\n    /* width: 82%; */\r\n    height: initial;\r\n    font-size: -webkit-xxx-large;\r\n}\r\n\r\n.fixed-centered-section {\r\n    /* position: fixed;\r\n    right: 261px; */\r\n    width: 40em;\r\n}\r\n\r\n.username-menu-layer {\r\n    display: inline-flex;\r\n    /* display: contents; */\r\n}\r\n\r\n.fixed-centered-section form label {\r\n    width: 24em;\r\n}\r\n\r\nsection .float_right {\r\n    float: none\r\n}\r\n\r\n.submit-button {\r\n    /* position: absolute;\r\n    top: 27px;\r\n    right: 0; */\r\n    width: 8.4em;\r\n}\r\n\r\n.submit-button:focus {\r\n    outline: none;\r\n}\r\n\r\n.dropdown-submitted {\r\n    /* margin-left: -8%; */\r\n}\r\n\r\n.dropdown-grid {\r\n    /* position: fixed; */\r\n    padding-top: 12px;\r\n}\r\n\r\n.submitted-dropdown {\r\n    padding-right: 12px;\r\n}\r\n\r\n.second-view .submit-button {\r\n    position: absolute;\r\n    /* top: 2px; */\r\n    /* right: -84px; */\r\n    width: 8.4em;\r\n}\r\n\r\n.second-view .fixed-header {\r\n    display: flex;\r\n    flex-direction: row;\r\n    flex-wrap: nowrap;\r\n    justify-content: space-between;\r\n    box-shadow: 0 1px 2px -2 rgba(34, 36, 38, .15);\r\n    border-bottom: 1px solid rgba(34, 36, 38, .15);\r\n}\r\n\r\n.second-view .center {\r\n    /* margin: inherit; */\r\n}\r\n\r\n.submitted-items {\r\n    max-height: 8em;\r\n    overflow-y: scroll;\r\n    border-bottom: 1px black solid;\r\n    padding: 3px 20px;\r\n}\r\n\r\n.dropdown-menu {\r\n    width: 100%;\r\n    z-index:10000;\r\n}\r\n\r\n.dropdown-menu::-webkit-scrollbar {\r\n    display: none;\r\n}\r\n\r\n/* \r\nwidth: 85%;\r\nheight: initial;\r\nfont-size: -webkit-xxx-large; */\r\n\r\n.ui.segment {\r\n    box-shadow: none;\r\n    border: none;\r\n    margin-top: 0;\r\n    border-radius: 0;\r\n}\r\n\r\n.pushable {\r\n    overflow-y: hidden;\r\n}\r\n\r\n.unset-sidebar-height {\r\n    height: unset !important;\r\n\r\n}\r\n\r\n.pushable:not(body) {\r\n    transform: none;\r\n  }\r\n  \r\n  .pushable:not(body) > .ui.sidebar,\r\n  .pushable:not(body) > .fixed,\r\n  .pushable:not(body) > .pusher:after {\r\n    position: fixed;\r\n  }\r\n\r\n/* input[type=\"text\"] {\r\n    width: 200px;\r\n    height: 20px;\r\n    padding-right: 50px;\r\n}\r\n*/\r\ninput[type=\"submit\"] {\r\n    display: block;\r\n    margin: 5px auto;\r\n} \r\n\r\nsection .input-style .form-control {\r\n    font-size: 3vw;\r\n}\r\n\r\n.input-style .form-inline .form-group {\r\n    width: 100%;\r\n}\r\n\r\n.pushable>.pusher {\r\n    min-height: 100%;\r\n}\r\n\r\n.background {\r\n    background: brown;\r\n}\r\n\r\n.top-padding {\r\n    margin-top: 3.7em!important\r\n}\r\n\r\n.top-position-padding {\r\n    top: 3.7em!important;\r\n}\r\n\r\n\r\n/* RESPONSIVE */\r\n@media (max-width: 600px) {\r\n\r\n    .first-view .centered{\r\n        position: absolute;\r\n        top: 0;\r\n        bottom: 0;\r\n        left: 0;\r\n        right: 0;\r\n        margin: auto;\r\n        height: 16em;\r\n    }\r\n\r\n    .pusher .ui .row {\r\n        margin: 0\r\n    }\r\n        .column {\r\n      /* margin: 1em 2em; */\r\n      display: none;\r\n    }\r\n\r\n    .padding-to-center {\r\n        /* padding-left: initial; */\r\n    }\r\n\r\n    section .input-style .form-control.initial-screen-input-box{\r\n        width: 100%;\r\n    }\r\n\r\n    .submitted-dropdown {\r\n        padding-right: initial;\r\n    }\r\n\r\n    .unset-sidebar-height {\r\n        height: initial !important;\r\n    \r\n    }\r\n  }\r\n\r\n  footer{\r\n    text-align: center;\r\n  }", ""]);
 // Exports
 module.exports = exports;
 
